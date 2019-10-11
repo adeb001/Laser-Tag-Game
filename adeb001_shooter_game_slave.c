@@ -84,13 +84,17 @@ void TimerSet(unsigned long M)
 unsigned char data1 = 0;
 unsigned char data2 = 0;
 unsigned char tens = 0;
+unsigned char text_code = 0;
+unsigned char hits_val = 0;
+unsigned char sound_code = 0;
+unsigned char ammo_val = 0;
 enum States {Init} state;
 char* string;
 int LCD_Tick();
 
 void getString()
 {
-	switch(data1)
+	switch(text_code)
 	{
 		case 0: {string = "Shooter Game... Booting Sensors"; break;};
 		case 1: {string = "Total Hits: "; break;};
@@ -102,12 +106,42 @@ void getString()
 void getTens()
 {
 	unsigned int tmpA = 0;
-	tmpA = data2 / 10;
+	tmpA = hits_val / 10;
 	switch (tmpA)
 	{
 		case 1: {tens = 1; break;};
 		case 2: {tens = 2; break;};
 		case 3: {tens = 3; break;};
+		default: break;
+	}
+}
+
+void getSound()
+{
+	switch(sound_code)
+	{
+		case 0: {break;};
+		default: break;
+	}
+}
+
+void getAmmo()
+{
+	switch (ammo_val)
+	{
+		case 0: {break;};
+		default: break;
+	}
+}
+
+void USART_code()
+{
+	switch (data1)
+	{
+		case 0: {text_code = data2; getString(); break;};
+		case 1: {hits_val = data2; break;};
+		case 2: {sound_code = data2; getSound(); break;};
+		case 3: {ammo_val = data2; getAmmo(); break;};
 		default: break;
 	}
 }
@@ -136,45 +170,41 @@ int LCD_Tick(int state)
 			{
 				data2 = USART_Receive(1);
 			}
-			getString();
+			USART_code();
 			LCD_DisplayString(1,string);
 			LCD_Cursor(0);
-			if (data1 != 0)
+			if (text_code == 1)
 			{
-				if (data1 == 1)
+				LCD_Cursor(13);
+				if (hits_val < 10)
 				{
-					LCD_Cursor(13);
-					if (data2 < 10)
-					{
-						LCD_WriteData(data2 + '0');
-					}
-					else if (data2 >= 10)
-					{
-						getTens();
-						LCD_WriteData(tens + '0');
-						LCD_Cursor(14);
-						data2 = data2 % 10;
-						LCD_WriteData(data2 + '0');
-					}
-					LCD_Cursor(0);
+					LCD_WriteData(hits_val + '0');
 				}
-				else if (data1 == 2)
+				else if (hits_val >= 10)
 				{
-					LCD_Cursor(29);
-					if (data2 < 10)
-					{
-						LCD_WriteData(data2 + '0');
-					}
-					else if (data2 >= 10)
-					{
-						getTens();
-						LCD_WriteData(tens + '0');
-						LCD_Cursor(30);
-						data2 = data2 % 10;
-						LCD_WriteData(data2 + '0');
-					}
-					LCD_Cursor(0);
+					LCD_WriteData(tens + '0');
+					LCD_Cursor(14);
+					hits_val = hits_val % 10;
+					LCD_WriteData(hits_val + '0');
 				}
+				LCD_Cursor(0);
+			}
+			else if (text_code == 2)
+			{
+				LCD_Cursor(29);
+				if (hits_val < 10)
+				{
+					LCD_WriteData(hits_val + '0');
+				}
+				else if (hits_val >= 10)
+				{
+					getTens();
+					LCD_WriteData(tens + '0');
+					LCD_Cursor(30);
+					hits_val = hits_val % 10;
+					LCD_WriteData(hits_val + '0');
+				}
+				LCD_Cursor(0);
 			}
 			break;
 		}
@@ -187,16 +217,16 @@ int LCD_Tick(int state)
 
 int main(void)
 {
-	DDRC = 0xFF;
-	PORTC = 0x00;
-	DDRD = 0xFF;
-	PORTD = 0x00;
+	DDRA = 0xFF; PORTA = 0x00;
+	DDRB = 0xFF; PORTB = 0x00;
+	DDRC = 0xFF; PORTC = 0x00;
+	DDRD = 0xFF; PORTD = 0x00;
 	initUSART(0);
 	initUSART(1);
 	LCD_init();
 
 	// Period for the tasks
-	unsigned long int LCD_calc = 500;
+	unsigned long int LCD_calc = 100;
 
 
 	//Calculating GCD

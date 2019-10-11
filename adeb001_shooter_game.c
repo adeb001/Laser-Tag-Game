@@ -109,6 +109,8 @@ enum Motor_States{Init,Press_CW,Press_CCW};
 enum Gesture_States{Initialize,Input};
 enum Photoresistor_LED_States{P_L};
 enum Game_States{G_Init,Get_Target,Show_Target,Laser_Hit,Game_End};
+enum Laser_States{L_Init,Fire_Btn,Empty_Ammo,Reload};
+enum USART_States{Text,Hits,Sound,Ammo};
 //motor sm
 unsigned char input_v = 0;
 unsigned char tmpA = 0;
@@ -123,6 +125,7 @@ unsigned int maxCount = 0;
 unsigned int count = 0;
 //game sm
 int gameStart = 0;
+unsigned int resetbtn = 0;
 unsigned char photo_code = 0;
 unsigned char led_code = 0;
 unsigned int l_hit = 0;
@@ -132,15 +135,28 @@ unsigned char total_hits = 0x00;
 unsigned char c_target;
 unsigned char counter1 = 0;
 unsigned char pattern[20] = {2,5,8,1,4,6,5,2,7,3,6,1,5,8,2,3,6,1,4,8};
-unsigned char text_code = 0;
 unsigned short init_light = 0x01;
 unsigned char boot_cnt = 0;
 unsigned long end_cnt = 0;
+//laser sm
+unsigned char laser_btns;
+unsigned int laser_status = 0;
+unsigned long l_timer = 0;
+unsigned int firebtn = 0;
+unsigned int reloadbtn = 0;
+unsigned long rld_time = 0;
+unsigned int ammo_cnt = 10;
+// USART sm
+unsigned char USART_code = 0;
+unsigned char text_code = 0;
+unsigned char sound_code = 0;
 //SMs
 int Motor_Tick();
 int Gesture_Tick();
 int Photoresistor_LED_Tick();
 int Game_Tick();
+int Laser_Tick();
+int USART_Tick();
 
 int Motor_Tick(int state){
 	switch (state)
@@ -285,7 +301,7 @@ int Gesture_Tick(int state) {
 		{
 			init_cnt = 0;
 			gameStart = 1;
-			text_code = 1;
+			text_code = 0;
 			state = Input;
 			break;
 		}
@@ -300,14 +316,23 @@ int Gesture_Tick(int state) {
 	switch (state) {
 		case Initialize:
 		{
-			if (USART_IsSendReady(0))
+			//USART_code = 0;
+			/*if (USART_IsSendReady(0))
 			{
-				USART_Send(text_code,0);
+				USART_Send(USART_code,0);
 				if (USART_HasTransmitted(0))
 				{
 					USART_Flush(0);
 				}
 			}
+			if (USART_IsSendReady(1))
+			{
+				USART_Send(text_code,1);
+				if (USART_HasTransmitted(1))
+				{
+					USART_Flush(1);
+				}
+			}*/
 			if (boot_cnt < 100)
 			{
 				PORTC = init_light;
@@ -472,6 +497,7 @@ int Game_Tick(int state) {
 	switch (state) {
 		case G_Init:
 		{
+			total_hits = 0;
 			break;
 		}
 		case Get_Target:
@@ -503,9 +529,10 @@ int Game_Tick(int state) {
 		}
 		case Show_Target:
 		{
-			if (USART_IsSendReady(0))
+			//USART_code = 0;
+			/*if (USART_IsSendReady(0))
 			{
-				USART_Send(text_code,0);
+				USART_Send(USART_code,0);
 				if (USART_HasTransmitted(0))
 				{
 					USART_Flush(0);
@@ -513,12 +540,29 @@ int Game_Tick(int state) {
 			}
 			if (USART_IsSendReady(1))
 			{
-				USART_Send(total_hits,1);
+				USART_Send(text_code,1);
 				if (USART_HasTransmitted(1))
 				{
 					USART_Flush(1);
 				}
 			}
+			USART_code = 1;
+			if (USART_IsSendReady(0))
+			{
+				USART_Send(USART_code,0);
+				if (USART_HasTransmitted(0))
+				{
+					USART_Flush(0);
+				}
+			}
+			if (USART_IsSendReady(1))
+			{
+				USART_Send(hits_code,1);
+				if (USART_HasTransmitted(1))
+				{
+					USART_Flush(1);
+				}
+			}*/
 			c_timer++;
 			break;
 		}
@@ -526,10 +570,11 @@ int Game_Tick(int state) {
 		{
 			c_timer++;
 			total_hits++;
-			l_hit = 0;
+			/*l_hit = 0;
+			USART_code = 0;
 			if (USART_IsSendReady(0))
 			{
-				USART_Send(text_code,0);
+				USART_Send(USART_code,0);
 				if (USART_HasTransmitted(0))
 				{
 					USART_Flush(0);
@@ -537,12 +582,29 @@ int Game_Tick(int state) {
 			}
 			if (USART_IsSendReady(1))
 			{
-				USART_Send(total_hits,1);
+				USART_Send(text_code,1);
 				if (USART_HasTransmitted(1))
 				{
 					USART_Flush(1);
 				}
 			}
+			USART_code = 1;
+			if (USART_IsSendReady(0))
+			{
+				USART_Send(USART_code,0);
+				if (USART_HasTransmitted(0))
+				{
+					USART_Flush(0);
+				}
+			}
+			if (USART_IsSendReady(1))
+			{
+				USART_Send(hits_code,1);
+				if (USART_HasTransmitted(1))
+				{
+					USART_Flush(1);
+				}
+			}*/
 			break;
 		}
 		case Game_End:
@@ -554,9 +616,236 @@ int Game_Tick(int state) {
 			counter1 = 0;
 			led_code = 0;
 			text_code = 2;
+			/*USART_code = 0;
 			if (USART_IsSendReady(0))
 			{
-				USART_Send(text_code,0);
+				USART_Send(USART_code,0);
+				if (USART_HasTransmitted(0))
+				{
+					USART_Flush(0);
+				}
+			}
+			if (USART_IsSendReady(1))
+			{
+				USART_Send(text_code,1);
+				if (USART_HasTransmitted(1))
+				{
+					USART_Flush(1);
+				}
+			}
+			USART_code = 1;
+			if (USART_IsSendReady(0))
+			{
+				USART_Send(USART_code,0);
+				if (USART_HasTransmitted(0))
+				{
+					USART_Flush(0);
+				}
+			}
+			if (USART_IsSendReady(1))
+			{
+				USART_Send(hits_code,1);
+				if (USART_HasTransmitted(1))
+				{
+					USART_Flush(1);
+				}
+			}*/
+			end_cnt++;
+			break;
+		}
+		default:
+		break;
+	}
+	return state;
+}
+int Laser_Tick(int state)
+{
+	laser_btns = PIND & 0xC0;
+	//Transitions
+	switch(state){
+		case L_Init:
+		{
+			if(laser_btns == 128 && ammo_cnt > 0)
+			{
+				state = Fire_Btn;
+				break;
+			}
+			else if (laser_btns == 64)
+			{
+				state = Reload;
+				break;
+			}
+			else
+			{
+				state = L_Init;
+				break;
+			}
+		}
+		case Fire_Btn:
+		{
+			if(laser_btns == 0)
+			{
+				state = L_Init;
+				break;
+			}
+			else if(laser_btns == 128 && ammo_cnt > 0)
+			{
+				state = Fire_Btn;
+				break;
+			}
+			else if(laser_btns == 64)
+			{
+				state = Reload;
+				break;
+			}
+			else if (laser_btns == 128 && ammo_cnt <= 0)
+			{
+				state = Empty_Ammo;
+				break;
+			}
+			else
+			break;
+		}
+		case Empty_Ammo:
+		{
+			if(laser_btns == 64)
+			{
+				state = Reload;
+				break;
+			}
+			else
+			{
+				state = Empty_Ammo;
+				break;
+			}
+		}
+		case Reload:
+		{
+			if(laser_btns == 0 && rld_time >= 10)
+			{
+				state = L_Init;
+				break;
+			}
+			else if(laser_btns == 128 && rld_time >= 10)
+			{
+				state = Fire_Btn;
+				break;
+			}
+			else if(laser_btns == 64)
+			{
+				state = Reload;
+				break;
+			}
+			else break;
+		}
+		default: break;
+	}
+	//Actions
+	switch (state)
+	{
+		case L_Init:
+		{
+			l_timer = 0;
+			laser_status = 0;
+			break;
+		}
+		case Fire_Btn:
+		{
+			if (l_timer < 5 && laser_btns == 128)
+			{
+				l_timer++;
+				laser_status = 1;
+				break;
+			}
+			else if (l_timer >= 5 && l_timer < 10 && laser_btns == 128)
+			{
+				l_timer++;
+				laser_status = 0;
+				break;
+			}
+			else if (l_timer >= 10 && laser_btns == 128)
+			{
+				l_timer = 0;
+				laser_status = 0;
+				break;
+			}
+		}
+		case Empty_Ammo:
+		{
+			break;
+		}
+		case Reload:
+		{
+			rld_time = 0;
+			ammo_cnt = 10;
+			while (rld_time < 10)
+			{
+				rld_time++;
+			}
+			break;
+		}
+		default: break;
+	}
+	return state;
+}
+
+int USART_Tick(int state)
+{
+	//Transitions
+	switch (state)
+	{
+		case Text:
+		{
+			state = Hits;
+			break;
+		}
+		case Hits:
+		{
+			state = Sound;
+			break;
+		}
+		case Sound:
+		{
+			state = Ammo;
+			break;
+		}
+		case Ammo:
+		{
+			state = Text;
+			break;
+		}
+		default: state = Text; break;
+	}
+	//Actions
+	switch (state)
+	{
+		case Text:
+		{
+			USART_code = 0;
+			if (USART_IsSendReady(0))
+			{
+				USART_Send(USART_code,0);
+				if (USART_HasTransmitted(0))
+				{
+					USART_Flush(0);
+				}
+			}
+			if (USART_IsSendReady(1))
+			{
+				USART_Send(text_code,1);
+				if (USART_HasTransmitted(1))
+				{
+					USART_Flush(1);
+				}
+			}
+			break;
+		}
+		case Hits:
+		{
+			USART_code = 1;
+			if (USART_IsSendReady(0))
+			{
+				USART_Send(USART_code,0);
 				if (USART_HasTransmitted(0))
 				{
 					USART_Flush(0);
@@ -570,11 +859,52 @@ int Game_Tick(int state) {
 					USART_Flush(1);
 				}
 			}
-			end_cnt++;
 			break;
 		}
-		default:
-		break;
+		case Sound:
+		{
+			USART_code = 2;
+			if (USART_IsSendReady(0))
+			{
+				USART_Send(USART_code,0);
+				if (USART_HasTransmitted(0))
+				{
+					USART_Flush(0);
+				}
+			}
+			if (USART_IsSendReady(1))
+			{
+				USART_Send(sound_code,1);
+				if (USART_HasTransmitted(1))
+				{
+					USART_Flush(1);
+				}
+			}
+			break;
+		}
+		case Ammo:
+		{
+			USART_code = 3;
+			if (USART_IsSendReady(0))
+			{
+				USART_Send(USART_code,0);
+				if (USART_HasTransmitted(0))
+				{
+					USART_Flush(0);
+				}
+			}
+			if (USART_IsSendReady(1))
+			{
+				USART_Send(ammo_cnt,1);
+				if (USART_HasTransmitted(1))
+				{
+					USART_Flush(1);
+				}
+			}
+			break;
+		}
+		
+		default: break;
 	}
 	return state;
 }
@@ -592,6 +922,8 @@ int main()
 	unsigned long int Gesture_calc = 10;
 	unsigned long int Photoresistor_LED_calc = 10;
 	unsigned long int Game_calc = 50;
+	unsigned long int Laser_calc = 50;
+	unsigned long int USART_calc = 100;
 
 
 	//Calculating GCD
@@ -599,6 +931,8 @@ int main()
 	tmpGCD = findGCD(Motor_calc, Gesture_calc);
 	tmpGCD = findGCD(tmpGCD, Photoresistor_LED_calc);
 	tmpGCD = findGCD(tmpGCD, Game_calc);
+	tmpGCD = findGCD(tmpGCD, Laser_calc);
+	tmpGCD = findGCD(tmpGCD, USART_calc);
 
 	//Greatest common divisor for all tasks or smallest time unit for tasks.
 	unsigned long int GCD = tmpGCD;
@@ -608,10 +942,12 @@ int main()
 	unsigned long int Gesture_period = Gesture_calc/GCD;
 	unsigned long int Photoresistor_LED_period = Photoresistor_LED_calc/GCD;
 	unsigned long int Game_period = Game_calc/GCD;
+	unsigned long int Laser_period = Laser_calc/GCD;
+	unsigned long int USART_period = USART_calc/GCD;
 
 	//Declare an array of tasks
-	static task task1, task2, task3, task4;
-	task *tasks[] = { &task1, &task2, &task3, &task4 };
+	static task task1, task2, task3, task4, task5, task6;
+	task *tasks[] = { &task1, &task2, &task3, &task4, &task5, &task6 };
 	const unsigned short numTasks = sizeof(tasks)/sizeof(task*);
 
 	// Task 1
@@ -637,7 +973,19 @@ int main()
 	task4.period = Game_period;//Task Period.
 	task4.elapsedTime = Game_period;//Task current elapsed time.
 	task4.TickFct = &Game_Tick;//Function pointer for the tick.
-
+	
+	// Task 5
+	task5.state = -1;//Task initial state.
+	task5.period = Laser_period;//Task Period.
+	task5.elapsedTime = Laser_period;//Task current elapsed time.
+	task5.TickFct = &Laser_Tick;//Function pointer for the tick.
+	
+	// Task 6
+	task6.state = -1;//Task initial state.
+	task6.period = USART_period;//Task Period.
+	task6.elapsedTime = USART_period;//Task current elapsed time.
+	task6.TickFct = &USART_Tick;//Function pointer for the tick.
+	
 	// Set the timer and turn it on
 	TimerSet(GCD);
 	TimerOn();
