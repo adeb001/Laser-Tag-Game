@@ -422,6 +422,7 @@ int Game_Tick(int state) {
 		{
 			if (gameStart == 1)
 			{
+				sound_code = 1;
 				state = Get_Target;
 				break;
 			}
@@ -435,6 +436,7 @@ int Game_Tick(int state) {
 		{
 			if (c_timer >= max_timer)
 			{
+				sound_code = 2;
 				state = Game_End;
 				break;
 			}
@@ -448,6 +450,7 @@ int Game_Tick(int state) {
 		{
 			if (c_timer >= max_timer)
 			{
+				sound_code = 2;
 				state = Game_End;
 				break;
 			}
@@ -466,6 +469,7 @@ int Game_Tick(int state) {
 		{
 			if (c_timer >= max_timer)
 			{
+				sound_code = 2;
 				state = Game_End;
 				break;
 			}
@@ -479,6 +483,7 @@ int Game_Tick(int state) {
 		{
 			if (end_cnt >= 100)
 			{
+				sound_code = 0;
 				state = G_Init;
 				end_cnt = 0;
 				break;
@@ -667,11 +672,13 @@ int Laser_Tick(int state)
 		{
 			if(laser_btns == 128 && ammo_cnt > 0)
 			{
+				//	sound_code = 3;
 				state = Fire_Btn;
 				break;
 			}
 			else if (laser_btns == 64)
 			{
+				//sound_code = 4;
 				state = Reload;
 				break;
 			}
@@ -690,11 +697,13 @@ int Laser_Tick(int state)
 			}
 			else if(laser_btns == 128 && ammo_cnt > 0)
 			{
+				//sound_code = 3;
 				state = Fire_Btn;
 				break;
 			}
 			else if(laser_btns == 64)
 			{
+				//sound_code = 4;
 				state = Reload;
 				break;
 			}
@@ -710,6 +719,7 @@ int Laser_Tick(int state)
 		{
 			if(laser_btns == 64)
 			{
+				//sound_code = 4;
 				state = Reload;
 				break;
 			}
@@ -728,6 +738,7 @@ int Laser_Tick(int state)
 			}
 			else if(laser_btns == 128 && rld_time >= 10)
 			{
+				//sound_code = 3;
 				state = Fire_Btn;
 				break;
 			}
