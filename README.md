@@ -17,3 +17,11 @@ Previously called "Shooter Game", this laser tag game was inspired by arcade gam
 
 `-USART SM added with a period of 100ms which cycles between sending text codes, total hit values, sound codes(WIP) and ammo values(WIP).
 The USART SM solves the porblem of not being able to send more than 2 information values to the slave mcU. Before only text code and total hits value are sent to the slave mcU using USART1 and USART2 respectively. Now, the master mcU can send 1 information to the slave mcU every 100ms and the slave mcU will be able to handle this information and show the necessary outputs desired.`
+
+* 10/17/2019
+
+`-Background music is added to the game. A sound buzzer plays one of three melodies depending on the stage of the game. This is done by introducing pulse width modulation that converts an array of frequency values into sounds. `
+
+`-Music SM was added to the slave microcontroller which determines the melody to play. The melody will be played continuously until the state of the game changes. The state of the game is sent via USART by the master microcontroller.`
+
+`-Sound buzzer is connected to PIN B6.`
