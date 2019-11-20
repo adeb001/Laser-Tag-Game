@@ -25,3 +25,17 @@ The USART SM solves the porblem of not being able to send more than 2 informatio
 `-Music SM was added to the slave microcontroller which determines the melody to play. The melody will be played continuously until the state of the game changes. The state of the game is sent via USART by the master microcontroller.`
 
 `-Sound buzzer is connected to PIN B6.`
+
+### Bug Tracker/Potential Fixes:
+
+* Plays once
+
+`-The game can only be played once properly. Consecutive games have trouble resetting all values and goes into weird states.`
+
+`-I have seen weird transitions in my state machines that might have caused this bug. As my priority is perfecting the base game first, I will not pay attention to this bit until I get the game to work bug free.`
+
+* Motor doesn't not move in divisibles of 45 degrees
+
+`-The original state of the motor in degrees is not divisible by 45. Therefore the alignment of the motor is a little bit off.`
+
+`-The motor needs to be calibrated to be divisible by 45 to make sure when the game is build on a case, there will be no problem with the aiming angles.`
